@@ -126,7 +126,7 @@ def doBootstrap(VGP_lon, VGP_lat, NumberOfSites,paleolat,K,N,cutoff, nb):
 
 def getSw(paleolat,ks):
     
-    K = ks/((5 + 18*math.sin(paleolat)**2 + 9*math.sin(paleolat)**4)/8)
+    K = ks/((5 + 18*math.sin(np.radians(paleolat))**2 + 9*math.sin(np.radians(paleolat))**4)/8)
     return 81/math.sqrt(K)
     #return 0
     
@@ -143,7 +143,7 @@ def getSb(VGP_lon, VGP_lat, NumberOfSites,paleolat,K,N,cutoff):
             st = st + (angular_distance(VGP_mean_lat,VGP_mean_lon,VGP_lat[i],VGP_lon[i]))**2-getSw(paleolat[i],K[i])**2/N[i]
             s = s + (angular_distance(VGP_mean_lat,VGP_mean_lon,VGP_lat[i],VGP_lon[i]))**2
             count+=1
-    
+     
     return math.sqrt(s/(count-1)), math.sqrt(st/(count-1)), count
 
 

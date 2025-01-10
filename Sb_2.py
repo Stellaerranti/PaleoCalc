@@ -69,7 +69,7 @@ def calculate_average_coordinates(latitudes, longitudes):
 
     return average_lat, average_lon
 
-def doVandamme(VGP_lon, VGP_lat, NumberOfSites):
+def doVandamme(VGP_lon, VGP_lat, NumberOfSites,paleolat,K,N):
     
     VGP_mean_lat, VGP_mean_lon = calculate_average_coordinates(VGP_lat, VGP_lon)
     
@@ -82,14 +82,14 @@ def doVandamme(VGP_lon, VGP_lat, NumberOfSites):
     Theta_max = Theta.max()
     
     if (Theta_max<A):
-        return A, ASD, Theta.shape[0]
+        return A, getSb(VGP_lon, VGP_lat, VGP_lon.shape[0],paleolat,K,N,A)[0], ASD, Theta.shape[0]
     
     while Theta_max > A:
         
         Theta_max = Theta.max()
         
         if (Theta_max<A):
-            return A, ASD, Theta.shape[0]
+            return A, getSb(VGP_lon, VGP_lat, VGP_lon.shape[0],paleolat,K,N,A)[0], ASD, Theta.shape[0]
         
         VGP_lon, VGP_lat = VGP_lon[Theta < Theta_max], VGP_lat[Theta < Theta_max]
         
@@ -129,6 +129,8 @@ def getSw(paleolat,ks):
     K = ks/((5 + 18*math.sin(paleolat)**2 + 9*math.sin(paleolat)**4)/8)
     return 81/math.sqrt(K)
     #return 0
+    
+    
 
 def getSb(VGP_lon, VGP_lat, NumberOfSites,paleolat,K,N,cutoff):
     st = 0
@@ -146,7 +148,7 @@ def getSb(VGP_lon, VGP_lat, NumberOfSites,paleolat,K,N,cutoff):
 
 
 input_data = np.loadtxt('test3.txt')
-cutoff = 45
+cutoff = 25
 
 nb = 1000
 
@@ -155,14 +157,15 @@ nb = 1000
 #Долгота, широта, палеоширота сайта, кучность внутри сайта, число образцов в сайте
 
 Sb, count_cutoff  = getSb(input_data[:,0],input_data[:,1], input_data.shape[0], input_data[:,2], input_data[:,3], input_data[:,4],cutoff)
-Vandamme_cutoff, Vandamme_S, N_Vandamme = doVandamme(input_data[:,0],input_data[:,1], input_data.shape[0])
+Vandamme_cutoff, Vandamme_Sb, Vandamme_S, N_Vandamme = doVandamme(input_data[:,0],input_data[:,1], input_data.shape[0], input_data[:,2], input_data[:,3], input_data[:,4])
 
 low, high = doBootstrap(input_data[:,0],input_data[:,1], input_data.shape[0], input_data[:,2], input_data[:,3], input_data[:,4],cutoff, nb)
 
-print('Sb: ' + str(Sb))
-print('N cutoff: ' + str(count_cutoff))
-print('Low: '+ str(low))
-print('High: '+ str(high))
-print('Vandamme S: ' + str(Vandamme_S))
-print('Vandamme cutoff: ' + str(Vandamme_cutoff))
-print('N Vandamme: ' + str(N_Vandamme))        
+print(f'Sb: {Sb:.2f}')
+print(f'N cutoff: {count_cutoff}')
+print(f'Low: {low:.2f}')
+print(f'High: {high:.2f}')
+print(f'Vandamme S: {Vandamme_S:.2f}')
+print(f'Vandamme Sb: {Vandamme_Sb:.2f}')
+print(f'Vandamme cutoff: {Vandamme_cutoff:.2f}')
+print(f'N Vandamme: {N_Vandamme}')        

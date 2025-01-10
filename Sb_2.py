@@ -130,10 +130,10 @@ def getSw(paleolat,ks):
     return 81/math.sqrt(K)
     #return 0
     
-    
 
 def getSb(VGP_lon, VGP_lat, NumberOfSites,paleolat,K,N,cutoff):
     st = 0
+    s = 0
     count = 0
     
     VGP_mean_lat, VGP_mean_lon = calculate_average_coordinates(VGP_lat, VGP_lon)
@@ -141,9 +141,10 @@ def getSb(VGP_lon, VGP_lat, NumberOfSites,paleolat,K,N,cutoff):
     for i in range(NumberOfSites):
         if(angular_distance(VGP_mean_lat,VGP_mean_lon,VGP_lat[i],VGP_lon[i])<cutoff):
             st = st + (angular_distance(VGP_mean_lat,VGP_mean_lon,VGP_lat[i],VGP_lon[i]))**2-getSw(paleolat[i],K[i])**2/N[i]
+            s = s + (angular_distance(VGP_mean_lat,VGP_mean_lon,VGP_lat[i],VGP_lon[i]))**2
             count+=1
     
-    return math.sqrt(st/(count-1)), count
+    return math.sqrt(s/(count-1)), math.sqrt(st/(count-1)), count
 
 
 
@@ -156,20 +157,21 @@ nb = 1000
 #Порядок в файле:
 #Долгота, широта, палеоширота сайта, кучность внутри сайта, число образцов в сайте
 
-Sb, count_cutoff  = getSb(input_data[:,0],input_data[:,1], input_data.shape[0], input_data[:,2], input_data[:,3], input_data[:,4],cutoff)
+S, Sb, count_cutoff  = getSb(input_data[:,0],input_data[:,1], input_data.shape[0], input_data[:,2], input_data[:,3], input_data[:,4],cutoff)
 Vandamme_cutoff, Vandamme_Sb, Vandamme_S, N_Vandamme = doVandamme(input_data[:,0],input_data[:,1], input_data.shape[0], input_data[:,2], input_data[:,3], input_data[:,4])
 
 low, high = doBootstrap(input_data[:,0],input_data[:,1], input_data.shape[0], input_data[:,2], input_data[:,3], input_data[:,4],cutoff, nb)
 
 Vandamme_low, Vandamme_high = doBootstrap(input_data[:,0],input_data[:,1], input_data.shape[0], input_data[:,2], input_data[:,3], input_data[:,4],Vandamme_cutoff, nb)
-
+print(f'S: {S:.2f}')
 print(f'Sb: {Sb:.2f}')
+print(f'Cutoff: {cutoff:.2f}')
 print(f'N cutoff: {count_cutoff}')
 print(f'Low: {low:.2f}')
 print(f'High: {high:.2f}')
 print(f'Vandamme S: {Vandamme_S:.2f}')
 print(f'Vandamme Sb: {Vandamme_Sb:.2f}')
-print(f'Vandamme low: {Vandamme_low:.2f}')
-print(f'Vandamme high: {Vandamme_high:.2f}')
 print(f'Vandamme cutoff: {Vandamme_cutoff:.2f}')
 print(f'N Vandamme: {N_Vandamme}')        
+print(f'Vandamme low: {Vandamme_low:.2f}')
+print(f'Vandamme high: {Vandamme_high:.2f}')

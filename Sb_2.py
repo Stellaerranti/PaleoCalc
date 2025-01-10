@@ -148,7 +148,7 @@ def getSb(VGP_lon, VGP_lat, NumberOfSites,paleolat,K,N,cutoff):
 
 
 input_data = np.loadtxt('test3.txt')
-cutoff = 25
+cutoff = 45
 
 nb = 1000
 
@@ -161,11 +161,15 @@ Vandamme_cutoff, Vandamme_Sb, Vandamme_S, N_Vandamme = doVandamme(input_data[:,0
 
 low, high = doBootstrap(input_data[:,0],input_data[:,1], input_data.shape[0], input_data[:,2], input_data[:,3], input_data[:,4],cutoff, nb)
 
+Vandamme_low, Vandamme_high = doBootstrap(input_data[:,0],input_data[:,1], input_data.shape[0], input_data[:,2], input_data[:,3], input_data[:,4],Vandamme_cutoff, nb)
+
 print(f'Sb: {Sb:.2f}')
 print(f'N cutoff: {count_cutoff}')
 print(f'Low: {low:.2f}')
 print(f'High: {high:.2f}')
 print(f'Vandamme S: {Vandamme_S:.2f}')
 print(f'Vandamme Sb: {Vandamme_Sb:.2f}')
+print(f'Vandamme low: {Vandamme_low:.2f}')
+print(f'Vandamme high: {Vandamme_high:.2f}')
 print(f'Vandamme cutoff: {Vandamme_cutoff:.2f}')
 print(f'N Vandamme: {N_Vandamme}')        

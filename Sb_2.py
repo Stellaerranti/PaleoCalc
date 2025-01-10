@@ -91,7 +91,11 @@ def doVandamme(VGP_lon, VGP_lat, NumberOfSites):
         if (Theta_max<A):
             return A, ASD, Theta.shape[0]
         
-        Theta = Theta[Theta < Theta_max]
+        VGP_lon, VGP_lat = VGP_lon[Theta < Theta_max], VGP_lat[Theta < Theta_max]
+        
+        VGP_mean_lat, VGP_mean_lon = calculate_average_coordinates(VGP_lat, VGP_lon)
+        
+        Theta = angular_distance(VGP_mean_lat,VGP_mean_lon,VGP_lat,VGP_lon)
         
         ASD = np.sqrt(np.sum(Theta**2)/(Theta.shape[0]-1))
         
@@ -114,7 +118,7 @@ def doBootstrap(VGP_lon, VGP_lat, NumberOfSites,paleolat,K,N,cutoff, nb):
         K_bootstrap = K[indices]
         N_bootstrap = N[indices]
         
-        Sbs.append(getSb(VGP_lon_bootstrap, VGP_lat_bootstrap, NumberOfSites, paleolat_bootstrap, K_bootstrap, N_bootstrap, cutoff))    
+        Sbs.append(getSb(VGP_lon_bootstrap, VGP_lat_bootstrap, NumberOfSites, paleolat_bootstrap, K_bootstrap, N_bootstrap, cutoff)[0])    
     
     Sbs.sort()
     

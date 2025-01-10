@@ -82,14 +82,14 @@ def doVandamme(VGP_lon, VGP_lat, NumberOfSites,paleolat,K,N):
     Theta_max = Theta.max()
     
     if (Theta_max<A):
-        return A, getSb(VGP_lon, VGP_lat, VGP_lon.shape[0],paleolat,K,N,A)[0], ASD, Theta.shape[0]
+        return A, getSb(VGP_lon, VGP_lat, VGP_lon.shape[0],paleolat,K,N,A)[1], ASD, Theta.shape[0]
     
     while Theta_max > A:
         
         Theta_max = Theta.max()
         
         if (Theta_max<A):
-            return A, getSb(VGP_lon, VGP_lat, VGP_lon.shape[0],paleolat,K,N,A)[0], ASD, Theta.shape[0]
+            return A, getSb(VGP_lon, VGP_lat, VGP_lon.shape[0],paleolat,K,N,A)[1], ASD, Theta.shape[0]
         
         VGP_lon, VGP_lat = VGP_lon[Theta < Theta_max], VGP_lat[Theta < Theta_max]
         
@@ -148,7 +148,7 @@ def getSb(VGP_lon, VGP_lat, NumberOfSites,paleolat,K,N,cutoff):
 
 
 
-input_data = np.loadtxt('test3.txt')
+input_data = np.loadtxt('kupol.txt')
 cutoff = 45
 
 nb = 1000

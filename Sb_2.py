@@ -11,7 +11,7 @@ def angular_distance(lat1, lon1, lat2, lon2):
     lat2, lon2: Координаты второй точки (в градусах).
 
     Возвращает:
-    float: Угловое расстояние в радианах.
+    float: Угловое расстояние в градусах.
     """
     # Преобразуем координаты в радианы
     lat1_rad, lon1_rad = np.radians(lat1), np.radians(lon1)
@@ -150,7 +150,6 @@ def getSb(VGP_lon, VGP_lat, NumberOfSites,paleolat,K,N,cutoff):
 
 input_data = np.loadtxt('kupol.txt')
 cutoff = 45
-
 nb = 1000
 
 

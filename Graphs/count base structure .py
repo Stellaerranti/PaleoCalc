@@ -19,6 +19,7 @@ def angular_distance(lat1, lon1, lat2, lon2):
 def intersection_area(r1, r2, delta):
     if delta >= r1 + r2 or delta <= abs(r1 - r2):
         return 0
+
     part1 = r1**2 * np.arccos((delta**2 + r1**2 - r2**2) / (2 * delta * r1))
     part2 = r2**2 * np.arccos((delta**2 + r2**2 - r1**2) / (2 * delta * r2))
     part3 = 0.5 * np.sqrt((-delta + r1 + r2) * (delta + r1 - r2) * (delta - r1 + r2) * (delta + r1 + r2))

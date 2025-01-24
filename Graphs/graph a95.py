@@ -46,49 +46,54 @@ def intersection_area(r1, r2, delta):
     part3 = 0.5 * np.sqrt((-delta + r1 + r2) * (delta + r1 - r2) * (delta - r1 + r2) * (delta + r1 + r2))
     return part1 + part2 - part3
 
-def calculate_weighted_average_coordinates(latitudes, longitudes, weights):
+def calculate_average_coordinates_with_R(latitudes, longitudes, weights):
     """
-    Calculates the weighted average latitude and longitude based on graph edge weights.
+    Вычисляет средние значения широты, долготы и нормализованный вектор R.
 
-    Args:
-    latitudes (numpy.ndarray): Array of latitudes (in degrees).
-    longitudes (numpy.ndarray): Array of longitudes (in degrees).
-    weights (numpy.ndarray): Array of weights for each coordinate pair.
+    Аргументы:
+    latitudes (numpy.ndarray): Массив широт (в градусах).
+    longitudes (numpy.ndarray): Массив долгот (в градусах).
+    weights (numpy.ndarray): Массив весов для каждой координаты.
 
-    Returns:
-    tuple: Weighted average latitude and longitude (in degrees).
+    Возвращает:
+    tuple: Средняя широта (в градусах), средняя долгота (в градусах), нормализованный R.
     """
     if latitudes.size == 0 or longitudes.size == 0 or weights.size == 0:
-        raise ValueError("Latitude, longitude, and weight arrays must not be empty.")
+        raise ValueError("Массивы широт, долгот и весов не должны быть пустыми.")
 
     if not (latitudes.size == longitudes.size == weights.size):
-        raise ValueError("Latitude, longitude, and weight arrays must have the same size.")
+        raise ValueError("Массивы широт, долгот и весов должны быть одинакового размера.")
 
-    # Convert latitudes and longitudes from degrees to radians
+    # Преобразуем широты и долготы из градусов в радианы
     latitudes_rad = np.radians(latitudes)
     longitudes_rad = np.radians(longitudes)
 
-    # Convert to Cartesian coordinates
+    # Преобразуем в декартовы координаты
     x = weights * np.cos(latitudes_rad) * np.cos(longitudes_rad)
     y = weights * np.cos(latitudes_rad) * np.sin(longitudes_rad)
     z = weights * np.sin(latitudes_rad)
 
-    # Compute the weighted sums
+    # Суммируем с учётом весов и нормализуем
     total_weight = np.sum(weights)
-    x_weighted_mean = np.sum(x) / total_weight
-    y_weighted_mean = np.sum(y) / total_weight
-    z_weighted_mean = np.sum(z) / total_weight
+    x_mean = np.sum(x) / total_weight
+    y_mean = np.sum(y) / total_weight
+    z_mean = np.sum(z) / total_weight
 
-    # Convert back to spherical coordinates
-    hyp = np.sqrt(x_weighted_mean**2 + y_weighted_mean**2)
-    average_lat = np.arctan2(z_weighted_mean, hyp)
-    average_lon = np.arctan2(y_weighted_mean, x_weighted_mean)
+    # Рассчитываем нормализованный вектор R
+    #R = np.sqrt(x_mean**2 + y_mean**2 + z_mean**2)
+    
+    R = np.sqrt(np.sum((np.cos(latitudes_rad) * np.cos(longitudes_rad)))**2 + np.sum(np.cos(latitudes_rad) * np.sin(longitudes_rad))**2 + np.sum(np.sin(latitudes_rad))**2)
 
-    # Convert the result back to degrees
+    # Преобразуем обратно в сферические координаты
+    hyp = np.sqrt(x_mean**2 + y_mean**2)
+    average_lat = np.arctan2(z_mean, hyp)
+    average_lon = np.arctan2(y_mean, x_mean)
+
+    # Преобразуем результат обратно в градусы
     average_lat = np.degrees(average_lat)
     average_lon = np.degrees(average_lon)
-
-    return average_lat, average_lon
+    
+    return average_lat, average_lon, R
 
 def calculate_node_weights(graph, subgraph_nodes):
     """
@@ -211,9 +216,15 @@ for idx, subgraph in enumerate(subgraphs):
     subgraph_weights = np.array([node_weights[node] for node in nodes])
 
     # Calculate weighted average coordinates
-    avg_lat, avg_lon = calculate_weighted_average_coordinates(
+    avg_lat, avg_lon, R = calculate_average_coordinates_with_R(
         subgraph_latitudes, subgraph_longitudes, subgraph_weights)
-    print(f"Cluster {idx + 1}: Weighted Average Latitude = {avg_lat}, Longitude = {avg_lon}")
+    
+    N = len(nodes)  # Число узлов в кластере
+    p = 0.05  # Уровень доверия 95%
+    term = (1 / p) ** (1 / (N - 1)) - 1
+    alpha_95 = np.degrees(np.arccos(1 - ((N - R) / R) * term))
+    
+    print(f"Cluster {idx + 1}: Weighted Average Latitude = {avg_lat}, Longitude = {avg_lon}, a95 = {alpha_95}")
 
 '''
 for idx, subgraph in enumerate(subgraphs):

@@ -82,7 +82,8 @@ def calculate_average_coordinates_with_R(latitudes, longitudes, weights):
     # Рассчитываем нормализованный вектор R
     #R = np.sqrt(x_mean**2 + y_mean**2 + z_mean**2)
     
-    R = np.sqrt(np.sum((np.cos(latitudes_rad) * np.cos(longitudes_rad)))**2 + np.sum(np.cos(latitudes_rad) * np.sin(longitudes_rad))**2 + np.sum(np.sin(latitudes_rad))**2)
+    R = np.sqrt(np.sum((np.cos(latitudes_rad) * np.cos(longitudes_rad)))**2 
+                + np.sum(np.cos(latitudes_rad) * np.sin(longitudes_rad))**2 + np.sum(np.sin(latitudes_rad))**2)
 
     # Преобразуем обратно в сферические координаты
     hyp = np.sqrt(x_mean**2 + y_mean**2)
@@ -119,7 +120,8 @@ def calculate_node_weights(graph, subgraph_nodes):
 
     return node_weights
 
-data = np.loadtxt('data_1.txt')  # Файл с широтой, долготой и a95
+#data = np.loadtxt('data_vanya_grouped.txt')  # Файл с широтой, долготой и a95
+data = np.loadtxt('data_vanya_not_grouped.txt')
 latitudes = data[:,0]
 longitudes = data[:,1]
 a95_values = data[:,2]
@@ -167,81 +169,159 @@ colors = [node_to_cluster[node] for node in G.nodes()]
 nx.draw(G, pos, node_color=colors, with_labels=True, cmap=plt.cm.Set1)
 plt.show()
 '''
-
-infomap = Infomap()
-
-# Add edges from the graph to Infomap
-for u, v, data in G.edges(data=True):
-    weight = data.get("weight", 1.0)  # Default weight is 1.0 if not specified
-    infomap.addLink(u, v, weight)
-
-# Run the Infomap algorithm
-infomap.run()
-
-# Extract communities
-node_to_cluster = {node_id: module_id for node_id, module_id in infomap.modules}
-
-# Group nodes into communities
-communities = {}
-for node, cluster_id in node_to_cluster.items():
-    communities.setdefault(cluster_id, []).append(node)
-
-# Convert communities to list format
-communities = list(communities.values())
+components = list(nx.connected_components(G))
 
 
-
-# Visualize the graph with communities
-colors = [node_to_cluster[node] for node in G.nodes()]
-pos = nx.spring_layout(G)
-nx.draw(G, pos, node_color=colors, with_labels=True, cmap=plt.cm.Set1)
-plt.title("Graph with Infomap Communities")
-plt.show()
-
-
-subgraphs = []
-for idx, community in enumerate(communities):
-    subgraph = G.subgraph(community).copy()
-    subgraphs.append(subgraph)
-
-for idx, subgraph in enumerate(subgraphs):
-    nodes = list(subgraph.nodes)
-
-    # Extract latitudes and longitudes
-    subgraph_latitudes = np.array([latitudes[node] for node in nodes])
-    subgraph_longitudes = np.array([longitudes[node] for node in nodes])
-
-    # Calculate weights for each node
-    node_weights = calculate_node_weights(G, nodes)
-    subgraph_weights = np.array([node_weights[node] for node in nodes])
-
-    # Calculate weighted average coordinates
-    avg_lat, avg_lon, R = calculate_average_coordinates_with_R(
-        subgraph_latitudes, subgraph_longitudes, subgraph_weights)
+for component_idx, component in enumerate(components):
+    # Create a subgraph for the current component
+    component_subgraph = G.subgraph(component).copy()
     
-    N = len(nodes)  # Число узлов в кластере
-    p = 0.05  # Уровень доверия 95%
-    term = (1 / p) ** (1 / (N - 1)) - 1
-    alpha_95 = np.degrees(np.arccos(1 - ((N - R) / R) * term))
+    infomap = Infomap()
     
-    print(f"Cluster {idx + 1}: Weighted Average Latitude = {avg_lat}, Longitude = {avg_lon}, a95 = {alpha_95}")
-
-'''
-for idx, subgraph in enumerate(subgraphs):
-    print(f"Cluster {idx + 1}:")
-    for node in subgraph.nodes:
-        lat = latitudes[node]
-        lon = longitudes[node]
-        print(f"  Node {node}: Latitude = {lat}, Longitude = {lon}")
-'''
-
-
-
-for idx, subgraph in enumerate(subgraphs):
-    pos = nx.spring_layout(subgraph)
-    nx.draw(subgraph, pos, with_labels=True, node_color=[idx] * subgraph.number_of_nodes(), cmap=plt.cm.Set1)
-    plt.title(f"Cluster {idx + 1}")
+    # Add edges from the component subgraph to Infomap
+    for u, v, data in component_subgraph.edges(data=True):
+        weight = data.get("weight", 1.0)  # Default weight is 1.0 if not specified
+        infomap.addLink(u, v, weight)
+    
+    # Run the Infomap algorithm
+    infomap.run()
+    
+    # Extract communities for the current component
+    node_to_cluster = {node_id: module_id for node_id, module_id in infomap.modules}
+    
+    # Group nodes into communities
+    communities = {}
+    for node, cluster_id in node_to_cluster.items():
+        communities.setdefault(cluster_id, []).append(node)
+    
+    # Convert communities to list format
+    communities = list(communities.values())
+    
+    # Visualize the current component with communities
+    colors = [node_to_cluster[node] for node in component_subgraph.nodes()]
+    pos = nx.spring_layout(component_subgraph)
+    nx.draw(component_subgraph, pos, node_color=colors, with_labels=True, cmap=plt.cm.Set1)
+    plt.title(f"Component {component_idx + 1} with Infomap Communities")
     plt.show()
+    
+    # Process subgraphs for each community within the component
+    subgraphs = []
+    for idx, community in enumerate(communities):
+        subgraph = component_subgraph.subgraph(community).copy()
+        subgraphs.append(subgraph)
+    
+    for idx, subgraph in enumerate(subgraphs):
+        nodes = list(subgraph.nodes)
+
+        # Extract latitudes and longitudes
+        subgraph_latitudes = np.array([latitudes[node] for node in nodes])
+        subgraph_longitudes = np.array([longitudes[node] for node in nodes])
+
+        # Calculate weights for each node
+        node_weights = calculate_node_weights(G, nodes)
+        subgraph_weights = np.array([node_weights[node] for node in nodes])
+
+        # Calculate weighted average coordinates
+        avg_lat, avg_lon, R = calculate_average_coordinates_with_R(
+            subgraph_latitudes, subgraph_longitudes, subgraph_weights
+        )
+
+        # Calculate alpha_95
+        N = len(nodes)  # Number of nodes in the cluster
+        p = 0.05  # 95% confidence level
+        term = (1 / p) ** (1 / (N - 1)) - 1
+        alpha_95 = np.degrees(np.arccos(1 - ((N - R) / R) * term))
+
+        #print(f"Component {component_idx + 1}, Cluster {idx + 1}:")
+        #print(f"  Weighted Average Latitude = {avg_lat}, Longitude = {avg_lon}, a95 = {alpha_95}")
+        print(f"{avg_lat}    {avg_lon}")
+    
+    # Visualize subgraphs (communities) within the component
+    if len(communities) > 1:
+        for idx, subgraph in enumerate(subgraphs):
+            pos = nx.spring_layout(subgraph)
+            nx.draw(subgraph, pos, with_labels=True, node_color=[idx] * subgraph.number_of_nodes(), cmap=plt.cm.Set1)
+            plt.title(f"Component {component_idx + 1}, Cluster {idx + 1}")
+            plt.show()
+        
+
+'''
+    infomap = Infomap()
+    
+    # Add edges from the graph to Infomap
+    for u, v, data in G.edges(data=True):
+        weight = data.get("weight")  # Default weight is 1.0 if not specified
+        infomap.addLink(u, v, weight)
+    
+    # Run the Infomap algorithm
+    infomap.run()
+    
+    # Extract communities
+    node_to_cluster = {node_id: module_id for node_id, module_id in infomap.modules}
+    
+    # Group nodes into communities
+    communities = {}
+    for node, cluster_id in node_to_cluster.items():
+        communities.setdefault(cluster_id, []).append(node)
+    
+    # Convert communities to list format
+    communities = list(communities.values())
+    
+    
+    
+    # Visualize the graph with communities
+    colors = [node_to_cluster[node] for node in G.nodes()]
+    pos = nx.spring_layout(G)
+    nx.draw(G, pos, node_color=colors, with_labels=True, cmap=plt.cm.Set1)
+    plt.title("Graph with Infomap Communities")
+    plt.show()
+    
+    
+    subgraphs = []
+    for idx, community in enumerate(communities):
+        subgraph = G.subgraph(community).copy()
+        subgraphs.append(subgraph)
+    
+    for idx, subgraph in enumerate(subgraphs):
+        nodes = list(subgraph.nodes)
+    
+        # Extract latitudes and longitudes
+        subgraph_latitudes = np.array([latitudes[node] for node in nodes])
+        subgraph_longitudes = np.array([longitudes[node] for node in nodes])
+    
+        # Calculate weights for each node
+        node_weights = calculate_node_weights(G, nodes)
+        subgraph_weights = np.array([node_weights[node] for node in nodes])
+    
+        # Calculate weighted average coordinates
+        avg_lat, avg_lon, R = calculate_average_coordinates_with_R(
+            subgraph_latitudes, subgraph_longitudes, subgraph_weights)
+        
+        N = len(nodes)  # Число узлов в кластере
+        p = 0.05  # Уровень доверия 95%
+        term = (1 / p) ** (1 / (N - 1)) - 1
+        alpha_95 = np.degrees(np.arccos(1 - ((N - R) / R) * term))
+        
+        print(f"Cluster {idx + 1}: Weighted Average Latitude = {avg_lat}, Longitude = {avg_lon}, a95 = {alpha_95}")
+        
+    for idx, subgraph in enumerate(subgraphs):
+        pos = nx.spring_layout(subgraph)
+        nx.draw(subgraph, pos, with_labels=True, node_color=[idx] * subgraph.number_of_nodes(), cmap=plt.cm.Set1)
+        plt.title(f"Cluster {idx + 1}")
+        plt.show()
+'''
+    
+'''
+    for idx, subgraph in enumerate(subgraphs):
+        print(f"Cluster {idx + 1}:")
+        for node in subgraph.nodes:
+            lat = latitudes[node]
+            lon = longitudes[node]
+            print(f"  Node {node}: Latitude = {lat}, Longitude = {lon}")
+'''
+    
+    
+    
 
 #for i in G.nodes:
     #for j in G.neighbors(i):

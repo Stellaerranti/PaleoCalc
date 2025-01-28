@@ -45,6 +45,7 @@ def intersection_area(r1, r2, delta):
     part2 = r2**2 * np.arccos((delta**2 + r2**2 - r1**2) / (2 * delta * r2))
     part3 = 0.5 * np.sqrt((-delta + r1 + r2) * (delta + r1 - r2) * (delta - r1 + r2) * (delta + r1 + r2))
     return part1 + part2 - part3
+    #return (part1 + part2 - part3)*math.sqrt(r1**2+r2**2)
 
 def calculate_average_coordinates_with_R(latitudes, longitudes, weights):
     """
@@ -121,7 +122,10 @@ def calculate_node_weights(graph, subgraph_nodes):
     return node_weights
 
 #data = np.loadtxt('data_vanya_grouped.txt')  # Файл с широтой, долготой и a95
-data = np.loadtxt('data_vanya_not_grouped.txt')
+#data = np.loadtxt('data_vanya_not_grouped.txt')
+
+data = np.loadtxt('a95 less 10/green reversed.txt')
+
 latitudes = data[:,0]
 longitudes = data[:,1]
 a95_values = data[:,2]
@@ -232,9 +236,9 @@ for component_idx, component in enumerate(components):
         term = (1 / p) ** (1 / (N - 1)) - 1
         alpha_95 = np.degrees(np.arccos(1 - ((N - R) / R) * term))
 
-        #print(f"Component {component_idx + 1}, Cluster {idx + 1}:")
-        #print(f"  Weighted Average Latitude = {avg_lat}, Longitude = {avg_lon}, a95 = {alpha_95}")
-        print(f"{avg_lat}    {avg_lon}")
+        print(f"Component {component_idx + 1}, Cluster {idx + 1}:")
+        print(f"  Weighted Average Latitude = {avg_lat}, Longitude = {avg_lon}, a95 = {alpha_95}")
+        #print(f"{avg_lat}    {avg_lon}")
     
     # Visualize subgraphs (communities) within the component
     if len(communities) > 1:

@@ -102,25 +102,34 @@ def doVandamme(VGP_lon, VGP_lat, NumberOfSites,paleolat,K,N):
         A = 1.8 * ASD + 5.        
 
 
-def doBootstrap(VGP_lon, VGP_lat, NumberOfSites,paleolat,K,N,cutoff, nb):
+def doBootstrap(VGP_lon, VGP_lat, NumberOfSites, paleolat, K, N, cutoff, nb):
+    VGP_lon = np.array(VGP_lon)
+    VGP_lat = np.array(VGP_lat)
     
     Sbs = []
     
     for i in range(nb):
-    
         indices = np.random.choice(NumberOfSites, size=NumberOfSites, replace=True)
         
         VGP_lon_bootstrap = VGP_lon[indices]
         VGP_lat_bootstrap = VGP_lat[indices]
         
         paleolat_bootstrap = paleolat[indices]
-        
         K_bootstrap = K[indices]
         N_bootstrap = N[indices]
         
-        Sbs.append(getSb(VGP_lon_bootstrap, VGP_lat_bootstrap, NumberOfSites, paleolat_bootstrap, K_bootstrap, N_bootstrap, cutoff)[0])    
+        Sb_value = getSb(VGP_lon_bootstrap, VGP_lat_bootstrap, NumberOfSites, paleolat_bootstrap, K_bootstrap, N_bootstrap, cutoff)[0]
+        if Sb_value is not None:  # Avoid adding None values
+            Sbs.append(Sb_value)
     
+    if len(Sbs) == 0:
+        print("Bootstrap produced no valid Sb values.")
+        return None, None
+
     Sbs.sort()
+    
+    #print(f"Bootstrap Results (first 10 values): {Sbs[:10]}")
+    #print(f"Bootstrap Results (last 10 values): {Sbs[-10:]}")
     
     return Sbs[int(.025 * nb)], Sbs[int(.975 * nb)]
 
@@ -131,7 +140,7 @@ def getSw(paleolat,ks):
     #return 0
     
 
-def getSb(VGP_lon, VGP_lat, NumberOfSites,paleolat,K,N,cutoff):
+def getSb(VGP_lon, VGP_lat, NumberOfSites, paleolat, K, N, cutoff):
     st = 0
     s = 0
     count = 0
@@ -139,12 +148,28 @@ def getSb(VGP_lon, VGP_lat, NumberOfSites,paleolat,K,N,cutoff):
     VGP_mean_lat, VGP_mean_lon = calculate_average_coordinates(VGP_lat, VGP_lon)
 
     for i in range(NumberOfSites):
-        if(angular_distance(VGP_mean_lat,VGP_mean_lon,VGP_lat[i],VGP_lon[i])<cutoff):
-            st = st + (angular_distance(VGP_mean_lat,VGP_mean_lon,VGP_lat[i],VGP_lon[i]))**2-getSw(paleolat[i],K[i])**2/N[i]
-            s = s + (angular_distance(VGP_mean_lat,VGP_mean_lon,VGP_lat[i],VGP_lon[i]))**2
-            count+=1
-     
-    return math.sqrt(s/(count-1)), math.sqrt(st/(count-1)), count
+        if angular_distance(VGP_mean_lat, VGP_mean_lon, VGP_lat[i], VGP_lon[i]) < cutoff:
+            
+            distance_sq = (angular_distance(VGP_mean_lat, VGP_mean_lon, VGP_lat[i], VGP_lon[i]))**2
+            
+            sw_value = getSw(paleolat[i], K[i])**2 / N[i]
+
+            st += distance_sq - sw_value
+            s += distance_sq
+            count += 1
+
+    if count <= 1:
+        print("Warning: count is too small, returning zeros.")
+        return 0, 0, count  # Avoid division by zero
+
+    s_value = s / (count - 1)
+    st_value = st / (count - 1)
+
+    # Prevent sqrt of negative numbers
+    s_sqrt = math.sqrt(max(s_value, 0))  # Ensures non-negative value
+    st_sqrt = math.sqrt(max(st_value, 0))
+
+    return s_sqrt, st_sqrt, count 
 
 
 

@@ -3,29 +3,22 @@ import numpy as np
 import math
 
 def angular_distance(lat1, lon1, lat2, lon2):
-    """
-    Вычисляет угловое расстояние между двумя точками на сфере по их широте и долготе.
+    #print(f"Computing distance: ({lat1}, {lon1}) to ({lat2}, {lon2})")  # Debugging
 
-    Аргументы:
-    lat1, lon1: Координаты первой точки (в градусах).
-    lat2, lon2: Координаты второй точки (в градусах).
-
-    Возвращает:
-    float: Угловое расстояние в градусах.
-    """
-    # Преобразуем координаты в радианы
     lat1_rad, lon1_rad = np.radians(lat1), np.radians(lon1)
     lat2_rad, lon2_rad = np.radians(lat2), np.radians(lon2)
 
-    # Вычисляем разницы координат
     delta_lat = lat2_rad - lat1_rad
-    delta_lon = lon2_rad - lon1_rad
+    delta_lon = (lon2_rad - lon1_rad + np.pi) % (2 * np.pi) - np.pi  # Ensures correct longitude difference
 
-    # Формула гаверсинуса
     a = np.sin(delta_lat / 2)**2 + np.cos(lat1_rad) * np.cos(lat2_rad) * np.sin(delta_lon / 2)**2
     c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
 
-    return c*180/np.pi
+    distance = c * 180 / np.pi
+    #print(f"Computed angular distance: {distance:.2f}")  # Debugging
+
+    return distance
+
 
 def calculate_average_coordinates(latitudes, longitudes):
     """
@@ -136,6 +129,7 @@ def doBootstrap(VGP_lon, VGP_lat, NumberOfSites, paleolat, K, N, cutoff, nb):
 def getSw(paleolat,ks):
     
     K = ks/((5 + 18*math.sin(np.radians(paleolat))**2 + 9*math.sin(np.radians(paleolat))**4)/8)
+    #s = 81/math.sqrt(K)
     return 81/math.sqrt(K)
     #return 0
     
@@ -150,10 +144,14 @@ def getSb(VGP_lon, VGP_lat, NumberOfSites, paleolat, K, N, cutoff):
     for i in range(NumberOfSites):
         if angular_distance(VGP_mean_lat, VGP_mean_lon, VGP_lat[i], VGP_lon[i]) < cutoff:
             
+            #distance = angular_distance(VGP_mean_lat, VGP_mean_lon, VGP_lat[i], VGP_lon[i])
             distance_sq = (angular_distance(VGP_mean_lat, VGP_mean_lon, VGP_lat[i], VGP_lon[i]))**2
             
+            #sw = getSw(paleolat[i], K[i])
             sw_value = getSw(paleolat[i], K[i])**2 / N[i]
-
+            
+            #diff = distance_sq - sw_value
+            
             st += distance_sq - sw_value
             s += distance_sq
             count += 1
@@ -173,8 +171,8 @@ def getSb(VGP_lon, VGP_lat, NumberOfSites, paleolat, K, N, cutoff):
 
 
 
-input_data = np.loadtxt('kupol.txt')
-cutoff = 45
+input_data = np.loadtxt('error 4.txt')
+cutoff = 180
 nb = 1000
 
 

@@ -124,7 +124,7 @@ def calculate_node_weights(graph, subgraph_nodes):
 #data = np.loadtxt('data_vanya_grouped.txt')  # Файл с широтой, долготой и a95
 #data = np.loadtxt('data_vanya_not_grouped.txt')
 
-data = np.loadtxt('a95 less 10/green reversed.txt')
+data = np.loadtxt('Lat_rev.txt')
 
 latitudes = data[:,0]
 longitudes = data[:,1]

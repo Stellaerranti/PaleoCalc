@@ -171,7 +171,7 @@ def getSb(VGP_lon, VGP_lat, NumberOfSites, paleolat, K, N, cutoff):
 
 
 
-input_data = np.loadtxt('error 4.txt')
+input_data = np.loadtxt('Lat_in.txt')
 cutoff = 180
 nb = 1000
 

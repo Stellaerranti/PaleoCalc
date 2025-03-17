@@ -124,7 +124,7 @@ def calculate_node_weights(graph, subgraph_nodes):
 #data = np.loadtxt('data_vanya_grouped.txt')  # Файл с широтой, долготой и a95
 #data = np.loadtxt('data_vanya_not_grouped.txt')
 
-data = np.loadtxt('Lat_rev.txt')
+data = np.loadtxt('TestG.txt')
 
 latitudes = data[:,0]
 longitudes = data[:,1]
@@ -233,8 +233,11 @@ for component_idx, component in enumerate(components):
         # Calculate alpha_95
         N = len(nodes)  # Number of nodes in the cluster
         p = 0.05  # 95% confidence level
-        term = (1 / p) ** (1 / (N - 1)) - 1
-        alpha_95 = np.degrees(np.arccos(1 - ((N - R) / R) * term))
+        if(N == 1):
+            alpha_95 = 0
+        else:
+            term = (1 / p) ** (1 / (N - 1)) - 1
+            alpha_95 = np.degrees(np.arccos(1 - ((N - R) / R) * term))
 
         print(f"Component {component_idx + 1}, Cluster {idx + 1}:")
         print(f"  Weighted Average Latitude = {avg_lat}, Longitude = {avg_lon}, a95 = {alpha_95}")

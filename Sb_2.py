@@ -140,10 +140,11 @@ def getSb(VGP_lon, VGP_lat, NumberOfSites, paleolat, K, N, cutoff):
     count = 0
     
     VGP_mean_lat, VGP_mean_lon = calculate_average_coordinates(VGP_lat, VGP_lon)
+    
 
     for i in range(NumberOfSites):
         if angular_distance(VGP_mean_lat, VGP_mean_lon, VGP_lat[i], VGP_lon[i]) < cutoff:
-            
+
             #distance = angular_distance(VGP_mean_lat, VGP_mean_lon, VGP_lat[i], VGP_lon[i])
             distance_sq = (angular_distance(VGP_mean_lat, VGP_mean_lon, VGP_lat[i], VGP_lon[i]))**2
             
@@ -171,8 +172,8 @@ def getSb(VGP_lon, VGP_lat, NumberOfSites, paleolat, K, N, cutoff):
 
 
 
-input_data = np.loadtxt('Lat_in.txt')
-cutoff = 180
+input_data = np.loadtxt('Sololi.txt')
+cutoff = 45
 nb = 1000
 
 
@@ -185,6 +186,7 @@ Vandamme_cutoff, Vandamme_Sb, Vandamme_S, N_Vandamme = doVandamme(input_data[:,0
 low, high = doBootstrap(input_data[:,0],input_data[:,1], input_data.shape[0], input_data[:,2], input_data[:,3], input_data[:,4],cutoff, nb)
 
 Vandamme_low, Vandamme_high = doBootstrap(input_data[:,0],input_data[:,1], input_data.shape[0], input_data[:,2], input_data[:,3], input_data[:,4],Vandamme_cutoff, nb)
+
 print(f'S: {S:.2f}')
 print(f'Sb: {Sb:.2f}')
 print(f'Cutoff: {cutoff:.2f}')
